@@ -5,52 +5,32 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>歌词搜索</title>
 <style>
-:root{
-  --bg:var(--md-surface);--bg-1:var(--md-surface-1);--bg-2:var(--md-surface-2);
-  --tx:var(--md-on-surface);--tx-2:var(--md-on-surface-variant);
-  --brd:var(--md-outline-variant);--accent:var(--md-primary,#7C9AE0);
-  --ok:var(--md-success,#4CAF50);--error:var(--md-error,#E57373);
-}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--tx);font-size:14px;line-height:1.6;font-family:system-ui,-apple-system,sans-serif}
+/* 歌词插件样式 — CSS 变量、reset、body 和字体由主程序 common.css 提供 */
 .wrap{max-width:520px;margin:0 auto;padding:24px 20px}
 h1{font-size:18px;font-weight:600;margin-bottom:4px}
-.sub{font-size:12px;color:var(--tx-2);margin-bottom:24px}
-.card{background:var(--bg-1);border:1px solid var(--brd);border-radius:8px;padding:16px;margin-bottom:16px}
-.card h2{font-size:13px;font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx-2)}
+.sub{font-size:12px;color:var(--md-on-surface-variant);margin-bottom:24px}
+.card h2{font-size:13px;font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--md-on-surface-variant)}
 
-/* Switch Row — 同 miot 插件风格 */
 .switch-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
 .switch-row-label{display:flex;flex-direction:column;gap:2px}
 .switch-row-title{font-size:14px;font-weight:500;color:var(--md-on-surface)}
 .switch-row-subtitle{font-size:12px;color:var(--md-on-surface-variant)}
 
-.switch{position:relative;display:inline-block;width:52px;height:32px;flex-shrink:0}
-.switch input{opacity:0;width:0;height:0}
-.switch-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--md-surface-variant);border:2px solid var(--md-outline);border-radius:16px;transition:all .2s ease}
-.switch-slider::before{content:'';position:absolute;height:16px;width:16px;left:6px;bottom:6px;background:var(--md-outline);border-radius:50%;transition:all .2s ease}
-.switch input:checked+.switch-slider{background:var(--accent);border-color:var(--accent)}
-.switch input:checked+.switch-slider::before{transform:translateX(20px);background:var(--md-on-primary);width:24px;height:24px;bottom:2px;left:2px}
-
 .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .row:last-child{margin-bottom:0}
 .row label{font-size:13px;flex:1}
-select,input[type=text]{padding:7px 10px;border:1px solid var(--brd);border-radius:6px;background:transparent;color:var(--tx);font-size:13px;outline:none;width:100%}
-select:focus,input[type=text]:focus{border-color:var(--accent)}
+select,input[type=text]{padding:7px 10px;border:1px solid var(--md-outline-variant);border-radius:6px;background:transparent;color:var(--md-on-surface);font-size:13px;outline:none;width:100%}
+select:focus,input[type=text]:focus{border-color:var(--md-primary)}
 select{width:auto;min-width:120px;cursor:pointer}
 .url-row{margin-top:8px}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--brd);border-radius:6px;background:transparent;color:var(--tx);font-size:13px;cursor:pointer;transition:all .2s}
-.btn:hover{border-color:var(--accent);color:var(--accent)}
-.btn.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
-.btn.pri:hover{opacity:.85}
-.btn:disabled{opacity:.4;cursor:default}
+.btn:disabled{opacity:.4;cursor:default;pointer-events:none}
 .status{margin-top:12px;font-size:12px;padding:8px 12px;border-radius:6px;display:none}
-.status.ok{display:block;background:rgba(76,175,80,.1);color:var(--ok)}
-.status.err{display:block;background:rgba(229,115,115,.1);color:var(--error)}
-.status.info{display:block;background:rgba(124,154,224,.1);color:var(--accent)}
+.status.ok{display:block;background:rgba(76,175,80,.1);color:var(--md-success)}
+.status.err{display:block;background:rgba(229,115,115,.1);color:var(--md-error)}
+.status.info{display:block;background:rgba(124,154,224,.1);color:var(--md-primary)}
 .test-row{display:flex;gap:8px;margin-bottom:8px}
 .test-row input{flex:1}
-.preview{margin-top:8px;font-size:11px;color:var(--tx-2);white-space:pre-wrap;max-height:120px;overflow-y:auto;font-family:'Fira Code','JetBrains Mono',monospace;background:var(--bg-2);padding:8px;border-radius:4px;display:none}
+.preview{margin-top:8px;font-size:11px;color:var(--md-on-surface-variant);white-space:pre-wrap;max-height:120px;overflow-y:auto;font-family:'Fira Code','JetBrains Mono',monospace;background:var(--md-surface-2);padding:8px;border-radius:4px;display:none}
 </style>
 </head>
 <body>
@@ -67,7 +47,8 @@ select{width:auto;min-width:120px;cursor:pointer}
       </div>
       <label class="switch">
         <input type="checkbox" id="enabled">
-        <span class="switch-slider"></span>
+        <span class="switch-track"></span>
+        <span class="switch-thumb"></span>
       </label>
     </div>
     <div class="row">
@@ -83,7 +64,7 @@ select{width:auto;min-width:120px;cursor:pointer}
   </div>
 
   <div style="display:flex;gap:8px">
-    <button class="btn pri" id="saveBtn" onclick="save()">保存</button>
+    <button class="btn btn-filled" id="saveBtn" onclick="save()">保存</button>
   </div>
   <div class="status" id="saveStatus"></div>
 
@@ -92,7 +73,7 @@ select{width:auto;min-width:120px;cursor:pointer}
     <div class="test-row">
       <input type="text" id="testTitle" placeholder="歌曲名" value="Bohemian Rhapsody">
       <input type="text" id="testArtist" placeholder="艺术家" value="Queen">
-      <button class="btn" id="testBtn" onclick="testSearch()">测试</button>
+      <button class="btn btn-outlined" id="testBtn" onclick="testSearch()">测试</button>
     </div>
     <div class="status" id="testStatus"></div>
     <div class="preview" id="preview"></div>

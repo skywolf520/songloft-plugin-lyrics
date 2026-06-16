@@ -44,10 +44,9 @@ export async function searchLyrics(
   // 先尝试精确匹配
   if (title && artist) {
     try {
-      const params = new URLSearchParams({
-        track_name: title,
-        artist_name: artist,
-      });
+      const params = new URLSearchParams();
+      params.set('track_name', title);
+      params.set('artist_name', artist);
       if (album) params.set('album_name', album);
       if (duration > 0) params.set('duration', String(Math.round(duration)));
 
