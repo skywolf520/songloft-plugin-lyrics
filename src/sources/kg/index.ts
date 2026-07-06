@@ -59,6 +59,8 @@ export class KuGouSource implements MusicSource {
         // 提取额外信息用于封面获取
         const albumId = item.AlbumID || item.album_id || item.albumId || '';
         const albumAudioId = item.AlbumAudioID || item.album_audio_id || item.albumAudioId || '';
+        // 搜索结果直接包含封面URL模板: http://imge.kugou.com/stdmusic/{size}/xxx.jpg
+        const imageUrl = item.Image || item.image || '';
 
         return {
           name: songName,
@@ -67,7 +69,7 @@ export class KuGouSource implements MusicSource {
           duration: (duration) * 1000,
           id: fileHash,
           source: 'kg',
-          _extra: { albumId, albumAudioId },
+          _extra: { albumId, albumAudioId, imageUrl },
         };
       });
     } catch (e) {
@@ -202,7 +204,15 @@ export class KuGouSource implements MusicSource {
 
   async getCover(song: SongSearchResult): Promise<CoverResult> {
     try {
-      // 酷狗封面需要额外的信息，尝试通过搜索结果中的 hash 获取
+      // 优先使用搜索结果中的 Image 字段（格式: http://imge.kugou.com/stdmusic/{size}/xxx.jpg）
+      const imageUrl = (song as any)._extra?.imageUrl;
+      if (imageUrl) {
+        const coverUrl = imageUrl.replace('{size}', '500');
+        songloft.log.info('[酷狗] 封面 (Image): ' + coverUrl);
+        return { coverUrl, source: 'kg' };
+      }
+
+      // 备选1: 通过 media API 获取
       const searchUrl = appendQuery(KG_SEARCH_URL, {
         keyword: song.name + ' ' + song.artist,
         page: 1,
@@ -217,46 +227,52 @@ export class KuGouSource implements MusicSource {
       });
 
       const item = searchResp?.data?.lists?.[0];
-      if (!item) {
-        return { coverUrl: null, source: 'kg' };
-      }
+      if (item) {
+        // 尝试从二次搜索结果中取 Image 字段
+        const imgFromSearch = item.Image || item.image;
+        if (imgFromSearch) {
+          const coverUrl = imgFromSearch.replace('{size}', '500');
+          songloft.log.info('[酷狗] 封面 (Image from re-search): ' + coverUrl);
+          return { coverUrl, source: 'kg' };
+        }
 
-      // 构建封面请求体
-      const hash = item.FileHash || item.file_hash || song.id;
-      const albumId = item.AlbumID || item.album_id || '';
-      const albumAudioId = item.AlbumAudioID || item.album_audio_id || '';
+        // 尝试 media API
+        const hash = item.FileHash || item.file_hash || song.id;
+        const albumId = item.AlbumID || item.album_id || '';
+        const albumAudioId = item.AlbumAudioID || item.album_audio_id || '';
 
-      const body = JSON.stringify({
-        hash,
-        album_audio_id: albumAudioId,
-        album_id: albumId,
-        is_mass: 0,
-        preview: 0,
-        privilege: 0,
-        cmd: 25,
-        behavior: 0,
-      });
+        const body = JSON.stringify({
+          hash,
+          album_audio_id: albumAudioId,
+          album_id: albumId,
+          is_mass: 0,
+          preview: 0,
+          privilege: 0,
+          cmd: 25,
+          behavior: 0,
+        });
 
-      const coverResp = await fetchJson<any>(KG_COVER_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': UA.kugou,
-        },
-        body: 'data=' + encodeURIComponent(body),
-      });
+        const coverResp = await fetchJson<any>(KG_COVER_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': UA.kugou,
+          },
+          body: 'data=' + encodeURIComponent(body),
+        });
 
-      const coverUrl = coverResp?.data?.url || coverResp?.data?.img;
-      if (coverUrl) {
-        return { coverUrl, source: 'kg' };
-      }
+        const coverUrl = coverResp?.data?.url || coverResp?.data?.img;
+        if (coverUrl) {
+          songloft.log.info('[酷狗] 封面 (media API): ' + coverUrl);
+          return { coverUrl, source: 'kg' };
+        }
 
-      // 备选：通过专辑封面 URL
-      if (albumId) {
-        return {
-          coverUrl: `https://img3.kugou.com/p/album_cover/500/${albumId}.jpg`,
-          source: 'kg',
-        };
+        // 备选2: 通过专辑ID拼接URL
+        if (albumId) {
+          const fallbackUrl = `https://img3.kugou.com/p/album_cover/500/${albumId}.jpg`;
+          songloft.log.info('[酷狗] 封面 (albumId fallback): ' + fallbackUrl);
+          return { coverUrl: fallbackUrl, source: 'kg' };
+        }
       }
 
       return { coverUrl: null, source: 'kg' };
