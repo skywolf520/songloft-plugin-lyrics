@@ -133,7 +133,7 @@ export class MiguSource implements MusicSource {
     try {
       const img = (song as any)._extra?.img;
       if (img) {
-        const coverUrl = img.startsWith('http') ? img : `http://d.musicapp.migu.cn${img}`;
+        const coverUrl = img.startsWith('http') ? img : `https://d.musicapp.migu.cn${img}`;
         return { coverUrl, source: 'mg' };
       }
       return { coverUrl: null, source: 'mg' };

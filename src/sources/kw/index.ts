@@ -102,6 +102,7 @@ export class KuWoSource implements MusicSource {
         pn: 1,
         rformat: 'json',
         encoding: 'utf8',
+        vipver: '1',
       });
 
       const resp = await safeFetch(url, {
@@ -120,6 +121,7 @@ export class KuWoSource implements MusicSource {
       return absList.slice(0, 10).map((item: any) => {
         const rid = item.MUSICRID || item.musicrid || item.RID || '';
         const id = String(rid).replace('MUSIC_', '').replace('music_', '');
+        const webAlbumPic = item.web_albumpic_short || '';
         return {
           name: item.SONGNAME || item.songName || item.name || '',
           artist: String(item.ARTIST || item.artist || item.SINGER || item.singer || '').replace(/&/g, '/'),
@@ -127,6 +129,7 @@ export class KuWoSource implements MusicSource {
           duration: parseInt(String(item.DURATION || item.duration || 0)) * 1000,
           id,
           source: 'kw',
+          _extra: { webAlbumPic },
         };
       });
     } catch (e) {
@@ -186,6 +189,19 @@ export class KuWoSource implements MusicSource {
 
   async getCover(song: SongSearchResult): Promise<CoverResult> {
     try {
+      // 优先使用搜索结果中的 web_albumpic_short 构造封面URL
+      const webAlbumPic = (song as any)._extra?.webAlbumPic;
+      if (webAlbumPic) {
+        // web_albumpic_short 格式: "120/{path}"，替换为 500px 大图
+        const coverPath = webAlbumPic.startsWith('120/')
+          ? '500/' + webAlbumPic.substring(4)
+          : webAlbumPic;
+        const coverUrl = `https://img2.kuwo.cn/star/albumcover/${coverPath}`;
+        songloft.log.info('[酷我] 封面 (albumcover): ' + coverUrl);
+        return { coverUrl, source: 'kw' };
+      }
+
+      // 备选：旧版 pic.web 接口（已不稳定，可能返回 Wrong）
       const url = appendQuery(KW_COVER_URL, {
         corp: 'kuwo',
         type: 'rid_pic',
@@ -201,8 +217,10 @@ export class KuWoSource implements MusicSource {
       if (text && text.startsWith('http')) {
         let coverUrl = text.trim().replace('.kwcdn.kuwo.cn', '.kuwo.cn');
         if (coverUrl.startsWith('http://')) coverUrl = coverUrl.replace('http://', 'https://');
+        songloft.log.info('[酷我] 封面 (pic.web): ' + coverUrl);
         return { coverUrl, source: 'kw' };
       }
+      songloft.log.info('[酷我] 封面接口无结果');
       return { coverUrl: null, source: 'kw' };
     } catch (e) {
       songloft.log.warn('[酷我] 获取封面失败: ' + String(e));
