@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/songloft-org/plugin-toolchain/main/schemas/plugin.schema.json",
   "name": "在线元数据（歌词+封面）",
-  "version": "2026.7.5",
+  "version": "2026.6.18",
   "description": "聚合网易云、酷狗、QQ音乐、酷我、咪咕 + LRClib 自动获取歌词和封面，播放时自动匹配",
   "author": "Songloft Community",
   "homepage": "https://github.com/songloft-org/songloft-plugin-lyrics",
@@ -16,7 +16,7 @@
   ],
   "icon": "icon.svg",
   "updateUrl": "https://raw.githubusercontent.com/skywolf520/songloft-plugin-lyrics/main/plugin.json",
-  "download_url": "",
+  "download_url": "https://github.com/skywolf520/songloft-plugin-lyrics/releases/download/v2026.6.18/lyrics.jsplugin.zip",
   "entryHash": "",
   "zipHash": ""
 }
