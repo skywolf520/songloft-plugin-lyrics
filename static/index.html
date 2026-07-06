@@ -279,10 +279,10 @@ $('lrclibProvider').addEventListener('change', toggleLrcUrl);
 
 function updateDependent() {
   const enabled = $('enabled').checked;
-  document.querySelectorAll('.switch-row:not(:first-child) .switch input, .source-switch input').forEach(el => {
+  document.querySelectorAll('.switch-row:not(:first-of-type) .switch input, .source-switch input').forEach(el => {
     el.disabled = !enabled;
   });
-  document.querySelectorAll('.switch-row:not(:first-child), .source-list, .lrclib-section, .test-row').forEach(el => {
+  document.querySelectorAll('.switch-row:not(:first-of-type), .source-list, .lrclib-section, .test-row').forEach(el => {
     el.style.opacity = enabled ? '' : '.45';
     el.style.pointerEvents = enabled ? '' : 'none';
   });
